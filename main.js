@@ -10,7 +10,7 @@ const cookieParser = require('cookie-parser');
 const postModel = require('./models/post');
 
 // Connect to MongoDB
-mongoose.connect('mongodb+srv://mayank_18:kartik18@cluster0.zmq1hky.mongodb.net/authusers?retryWrites=true&w=majority&appName=Cluster0').then(()=>{
+mongoose.connect('').then(()=>{
   console.log('Connected to MongoDB');
 }).catch((err)=>{
   console.error('Failed to connect to MongoDB', err);
