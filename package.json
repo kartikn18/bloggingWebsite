@@ -16,7 +16,17 @@
     "ejs": "^3.1.10",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
+    "kysely": "^0.28.17",
     "mongoose": "^8.18.1",
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "pg": "^8.20.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/pg": "^8.20.0",
+    "dotenv": "^17.4.2",
+    "ts-node": "^10.9.2",
+    "types": "^0.1.1",
+    "typescript": "^6.0.3"
   }
 }
