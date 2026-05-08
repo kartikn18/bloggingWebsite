@@ -8,5 +8,14 @@ export type user = {
 }
 export type post = {
     id:number,
-    
+    user_id:number,
+    likes:number,
+    content:string,
+    created_at: Date,
+    updated_at:Date
 }
+
+export interface database {
+USER :user,
+POST :post
+};
