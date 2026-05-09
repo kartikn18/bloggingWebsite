@@ -1,5 +1,6 @@
 import { Usermodel } from "../models/user.model";
 import bcrypt from "bcrypt";
+import { generateAccessToken,generateRefreshToken } from "../utils/jwt";
 export const userServices = {
    async registeruser(email:string,username:string,password:string){
     //first check krega user existances ko email se 
@@ -13,11 +14,11 @@ export const userServices = {
     const user = await Usermodel.createUser(email,username,hashedpassword);
     return user;
     },
-async longinuser(email:string,password:string){
+async loginuser(email:string,password:string){
     //first check user existannce 
     //phir passwowrd match krne ke liye bcrypt compare use krenga
     //phir user retunr kredenga and login krgdenge
-
+    //token generate krega and return krega 
     const existing = await Usermodel.getuserbyemail(email);
     if (!existing){
         throw new Error ("User does not exist");
@@ -26,7 +27,9 @@ async longinuser(email:string,password:string){
     if (!ispsswordmatch){
         throw new Error ("Invalid password");
     }
-    return existing;
+   const refreshtoken = generateRefreshToken({id:existing.id,email:existing.email});
+   const accesstoken = generateAccessToken({id:existing.id,email:existing.email})
+return { existing,refreshtoken,accesstoken}
 },
     
 }
