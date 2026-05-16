@@ -10,6 +10,8 @@ export type post = {
     id:number,
     user_id:number,
     likes:number,
+    title:string,
+    images:number,
     content:string,
     created_at: Date,
     updated_at:Date
