@@ -2,5 +2,5 @@
 export interface posts{
     title:string,
     content:string,
-    images:string[]
+    images:number| null;
 }

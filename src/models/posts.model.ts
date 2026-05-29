@@ -31,6 +31,16 @@ export const PostModel={
    async getallposts(){
     const posts = await db.selectFrom('POST').selectAll().orderBy('created_at','desc').execute();
     return posts;
+   },
+   // postimages_url of the posts in the db 
+   async postimagesurl(imageurl:string){
+    const posturl = await db.insertInto('BLOGSIMAGES_URL').values({
+        imageurl
+    } as any).returningAll().executeTakeFirst();
+    return posturl;
    }
+    }
 
-}
+
+
+

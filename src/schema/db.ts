@@ -16,8 +16,15 @@ export type post = {
     created_at: Date,
     updated_at:Date
 }
-
+export type blogsimages_url = {
+    id:number,
+    post_id:number,
+    images_url:string,
+    creates_at:Date,
+    updated_at:Date
+}
 export interface database {
 USER :user,
 POST :post
+BLOGSIMAGES_URL : blogsimages_url
 };
