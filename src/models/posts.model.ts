@@ -12,11 +12,10 @@ export const PostModel={
         } as any).returningAll().executeTakeFirst();
         return post;
     },
-    async updatepost(postid:number,title:string,content:string,images:number){
+    async updatepost(postid:number,title:string,content:string){
         const post = await db.updateTable('POST').set({
             title,
             content,
-            images
         } as any).where('id', '=', postid).returningAll().executeTakeFirst();
         return post;
     },
@@ -38,6 +37,10 @@ export const PostModel={
         imageurl
     } as any).returningAll().executeTakeFirst();
     return posturl;
+   },
+   async dashboardposts(userid:number){
+    const posts = await db.selectFrom('POST').selectAll().where('user_id', '=', userid).orderBy('created_at','desc').execute();
+    return posts;
    }
     }
 

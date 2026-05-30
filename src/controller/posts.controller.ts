@@ -30,6 +30,68 @@ export const postController = {
             next(error);
         }
     },
-    
-        
-      }
+    async updatePost(req:Request,res:Response,next:NextFunction){
+        const postid = req.params.id;
+        const {title,content} = req.body;
+        try{
+        const updatepost = await PostsService.updatepost(Number(postid),{title,content} as any);
+        res.status(200).json({
+            success:true,
+            message:'Post updated successfully',
+            updatepost
+        });
+    }
+    catch(error){
+        next(error);
+    }
+    },
+    async likePost(req:Request,res:Response,next:NextFunction){
+        const postid = req.params.id;
+        try{
+            const likepost = await PostsService.likepost(Number(postid));
+            res.status(200).json({
+                success:true,
+                message:'Post liked successfully',
+                likepost
+            });
+        }
+        catch(error){
+            next(error);
+        }
+    },
+    async getposts(req:Request,res:Response,next:NextFunction){
+        try{
+        const posts  = await PostsService.getallposts();
+        res.status(200).json({
+            success:true,
+            message:'Posts fetched successfully',
+            posts
+        });
+    }
+        catch(error){
+            res.status(500).json({
+                success:false,
+                message:'Something went wrong',
+                error
+            });
+        }
+    },
+    async dashboardposts(req:Request,res:Response,next:NextFunction){
+        const userid = req.user?.id;
+        try{
+            const posts = await PostsService.dashboardposts(userid as number);
+            res.status(200).json({
+                success:true,
+                message:'Dashboard posts fetched successfully',
+                posts
+            });
+        }
+        catch(error){
+            res.status(500).json({
+                success:false,
+                message:'Something went wrong',
+                error
+            });
+        }
+    }
+}

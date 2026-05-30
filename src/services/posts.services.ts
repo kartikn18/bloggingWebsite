@@ -12,7 +12,7 @@ export const PostsService = {
     },
     //update post :
     async updatepost(postid:number,postype:posts){
-        const updatepost  = await PostModel.updatepost(postid,postype.title,postype.content,postype.images as number);
+        const updatepost  = await PostModel.updatepost(postid,postype.title,postype.content);
         return updatepost;
     },
     async likepost(postid:number){
@@ -22,5 +22,8 @@ export const PostsService = {
     async getallposts(){
         return await PostModel.getallposts();
     },
-    
+    async dashboardposts(userid:number){
+        const posts = await PostModel.dashboardposts(userid);
+        return posts;
+    }
 }
