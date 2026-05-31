@@ -13,4 +13,5 @@ async getuserbyemail(email:string){
     const user = await db.selectFrom('USER').selectAll().where('email', '=', email).executeTakeFirst();
     return user;
 },
+
     }

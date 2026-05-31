@@ -3,7 +3,7 @@ import {middleare} from '../middleware/islogin'
 import { PostsService } from '../services/posts.services';
 import { uploadToCloudinary } from '../utils/upload';
 import multer from 'multer';
-
+import redisclint from '../config/redis';
 export const postController = {
         async createPost(req:Request,res:Response,next:NextFunction){
             const userid = req.user?.id;
@@ -79,7 +79,16 @@ export const postController = {
     async dashboardposts(req:Request,res:Response,next:NextFunction){
         const userid = req.user?.id;
         try{
+            const cachedposts = await redisclint.get(`dashboardposts:${userid}`);
+            if(cachedposts){
+                return res.json({
+                    success:true,
+                    message:'Dashboard posts fetched successfully from cache',
+                    posts:JSON.parse(cachedposts)
+                })
+            }
             const posts = await PostsService.dashboardposts(userid as number);
+            await redisclint.set(`dashboardposts:${userid}`, JSON.stringify(posts), 'EX', 300);
             res.status(200).json({
                 success:true,
                 message:'Dashboard posts fetched successfully',
