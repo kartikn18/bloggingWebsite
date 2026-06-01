@@ -19,10 +19,9 @@ export const middleare = {
             return res.status(401).json({message:'Unauthorized'})
         }
         try {
-            const verify = jwt.verify(token,process.env.JWT_SCERT as string) as any;
-            req.user ={
-                id:verify.id
-            }
+            const verify = jwt.verify(token, process.env.JWT_SECRET as string) as { id: number };
+            req.user = { id: verify.id };
+            next();
         } catch (error) {
             return res.status(401).json({message:'Unauthorized'})
         }

@@ -2,7 +2,6 @@ import {Request,Response,NextFunction} from 'express';
 import {middleare} from '../middleware/islogin'
 import { PostsService } from '../services/posts.services';
 import { uploadToCloudinary } from '../utils/upload';
-import multer from 'multer';
 import redisclint from '../config/redis';
 export const postController = {
         async createPost(req:Request,res:Response,next:NextFunction){
@@ -10,16 +9,23 @@ export const postController = {
       const {title,content} = req.body;
       const images  = Array.isArray(req.files) ? req.files : [];
       try{
-        const image = await Promise.all(images.map((file)=>uploadToCloudinary(file.path)));
-        const noofimages = images.length;
-        const imagesurl = image.map((img)=>img.data);
-                if(image.length === 0){
+        if (images.length === 0) {
             return res.status(400).json({
-                success:false,
-                message:'Please upload at least one image'
+                success: false,
+                message: 'Please upload at least one image',
             });
         }
-       const post = await PostsService.createpost({title,content,images:noofimages},userid as number,imagesurl[0].secure_url);
+        const uploads = await Promise.all(images.map((file) => uploadToCloudinary(file.path)));
+        const imageUrls = uploads
+            .filter((img) => img.success && img.data)
+            .map((img) => img.data as string);
+        if (imageUrls.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Image upload failed',
+            });
+        }
+       const post = await PostsService.createpost({title,content,images:images.length},userid as number,imageUrls[0]);
        res.status(201).json({
         success:true,
         message:'Post created successfully',

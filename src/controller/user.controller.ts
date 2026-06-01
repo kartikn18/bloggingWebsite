@@ -50,7 +50,7 @@ export const usercontroller = {
       res.cookie("refreshtoken", refreshtoken, {
         httpOnly: true,
         sameSite: "strict",
-        secure: true,
+        secure: process.env.NODE_ENV === "production",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 

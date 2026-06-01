@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { usercontroller } from "../controller/user.controller";
 import { loginattempts } from "../middleware/loginattempts";
-import { registerschema } from "../types.ts/auth.types"
+import { registerschema } from "../types/auth.types";
 import { validate } from "../middleware/validate";
 export const authroutes = Router();
 

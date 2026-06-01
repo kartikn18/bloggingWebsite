@@ -1,4 +1,4 @@
-export type user = {
+export type users = {
     id:number,
     username:string,
     email:string,
@@ -24,7 +24,7 @@ export type blogsimages_url = {
     updated_at:Date
 }
 export interface database {
-USER :user,
-POST :post
+USER :users,
+POST :post,
 BLOGSIMAGES_URL : blogsimages_url
 };

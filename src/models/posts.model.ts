@@ -1,4 +1,3 @@
-import { where } from "../../models/user";
 import { db } from "../config/db";
 
 // create posts of the user 
@@ -28,7 +27,22 @@ export const PostModel={
     },
    // see all posts home page of posts 
    async getallposts(){
-    const posts = await db.selectFrom('POST').selectAll().orderBy('created_at','desc').execute();
+    const posts = await db
+      .selectFrom('POST')
+      .innerJoin('USER', 'USER.id', 'POST.user_id')
+      .select([
+        'POST.id',
+        'POST.user_id',
+        'POST.title',
+        'POST.content',
+        'POST.likes',
+        'POST.images',
+        'POST.created_at',
+        'POST.updated_at',
+        'USER.username',
+      ])
+      .orderBy('POST.created_at', 'desc')
+      .execute();
     return posts;
    },
    // postimages_url of the posts in the db 

@@ -2,10 +2,10 @@
   "name": "vscode",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "main.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": " nodemon main.js"
+    "start": "nodemon --exec ts-node --transpile-only main.ts"
   },
   "keywords": [],
   "author": "",

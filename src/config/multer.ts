@@ -1,11 +1,20 @@
 import multer from 'multer';
+import os from 'os';
+import path from 'path';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-export const multerConfig = multer({
+const uploadDir = path.join(os.tmpdir(), 'blog-uploads');
 
-    storage: multer.diskStorage({}),
+export const multerConfig = multer({
+    storage: multer.diskStorage({
+        destination: (_req, _file, cb) => cb(null, uploadDir),
+        filename: (_req, file, cb) => {
+            const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+            cb(null, `${unique}-${file.originalname}`);
+        },
+    }),
 
     fileFilter: (req, file, cb) => {
 
