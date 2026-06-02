@@ -3,7 +3,7 @@ import { db } from "../config/db";
 // create posts of the user 
 export const PostModel={
     async createpost (userid:number,title:string,content:string,images:number){
-        const post = await db.insertInto('POST').values({
+        const post = await db.insertInto('posts').values({
             user_id:userid,
             title,
             content,
@@ -12,7 +12,7 @@ export const PostModel={
         return post;
     },
     async updatepost(postid:number,title:string,content:string){
-        const post = await db.updateTable('POST').set({
+        const post = await db.updateTable('posts').set({
             title,
             content,
         } as any).where('id', '=', postid).returningAll().executeTakeFirst();
@@ -20,7 +20,7 @@ export const PostModel={
     },
     // do liking th posts of the posts
     async likepost(postid:number){
-       const post = await db.updateTable('POST').set((eb)=>({
+       const post = await db.updateTable('posts').set((eb)=>({
         likes:eb('likes', '+', 1)
        } as any)).where ('id', '=', postid).returningAll().executeTakeFirst();
        return post;
@@ -28,32 +28,32 @@ export const PostModel={
    // see all posts home page of posts 
    async getallposts(){
     const posts = await db
-      .selectFrom('POST')
-      .innerJoin('USER', 'USER.id', 'POST.user_id')
+      .selectFrom('posts')
+      .innerJoin('users', 'users.id', 'posts.user_id')
       .select([
-        'POST.id',
-        'POST.user_id',
-        'POST.title',
-        'POST.content',
-        'POST.likes',
-        'POST.images',
-        'POST.created_at',
-        'POST.updated_at',
-        'USER.username',
+        'posts.id',
+        'posts.user_id',
+        'posts.title',
+        'posts.content',
+        'posts.likes',
+        'posts.images',
+        'posts.created_at',
+        'posts.updated_at',
+        'users.username',
       ])
-      .orderBy('POST.created_at', 'desc')
+      .orderBy('posts.created_at', 'desc')
       .execute();
     return posts;
    },
    // postimages_url of the posts in the db 
    async postimagesurl(imageurl:string){
-    const posturl = await db.insertInto('BLOGSIMAGES_URL').values({
+    const posturl = await db.insertInto('blogsimages_url').values({
         imageurl
     } as any).returningAll().executeTakeFirst();
     return posturl;
    },
    async dashboardposts(userid:number){
-    const posts = await db.selectFrom('POST').selectAll().where('user_id', '=', userid).orderBy('created_at','desc').execute();
+    const posts = await db.selectFrom('posts').selectAll().where('user_id', '=', userid).orderBy('created_at','desc').execute();
     return posts;
    }
     }

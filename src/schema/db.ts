@@ -2,7 +2,7 @@ export type users = {
     id:number,
     username:string,
     email:string,
-    password:string,
+    password_hash:string,
     created_at:Date,
     updated:Date
 }
@@ -19,12 +19,12 @@ export type post = {
 export type blogsimages_url = {
     id:number,
     post_id:number,
-    images_url:string,
+    image_url:string,
     creates_at:Date,
     updated_at:Date
 }
 export interface database {
-USER :users,
-POST :post,
-BLOGSIMAGES_URL : blogsimages_url
+users :users,
+posts :post,
+blogsimages_url : blogsimages_url
 };

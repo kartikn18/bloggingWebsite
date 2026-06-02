@@ -23,7 +23,7 @@ async loginuser(email:string,password:string){
     if (!existing){
         throw new Error ("User does not exist");
     }
-    const ispsswordmatch = await bcrypt.compare(password,existing.password);
+    const ispsswordmatch = await bcrypt.compare(password,existing.password_hash);
     if (!ispsswordmatch){
         throw new Error ("Invalid password");
     }

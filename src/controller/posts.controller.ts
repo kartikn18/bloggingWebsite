@@ -1,13 +1,19 @@
 import {Request,Response,NextFunction} from 'express';
-import {middleare} from '../middleware/islogin'
 import { PostsService } from '../services/posts.services';
 import { uploadToCloudinary } from '../utils/upload';
 import redisclint from '../config/redis';
 export const postController = {
         async createPost(req:Request,res:Response,next:NextFunction){
-            const userid = req.user?.id;
+        const userid = req.user?.id;
       const {title,content} = req.body;
+      const allowedformats = ['image/jpeg','image/png','image/gif'];
       const images  = Array.isArray(req.files) ? req.files : [];
+      if(images.some((file) => !allowedformats.includes(file.mimetype))) {
+        return res.status(400).json({
+            success:false,
+            message:'Only image files are allowed (jpeg, png, gif)',
+        });// return boolean and stop executing if any file is not in allowed formats
+      }
       try{
         if (images.length === 0) {
             return res.status(400).json({

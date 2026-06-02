@@ -65,10 +65,15 @@
           body: JSON.stringify(body),
         });
 
-        if (response.ok) {
+        if (response.ok && data.accesstoken) {
           setSession(data.accesstoken, data.user);
           showMessage('Login successful. Redirecting…', 'success');
           setTimeout(() => { window.location.href = '/dashboard'; }, 600);
+          return;
+        }
+
+        if (response.ok && !data.accesstoken) {
+          showMessage('Login succeeded but no access token was returned. Check JWT_SECRET in .env.', 'danger');
           return;
         }
 

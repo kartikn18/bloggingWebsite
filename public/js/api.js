@@ -2,14 +2,22 @@ const TOKEN_KEY = 'accesstoken';
 const USER_KEY = 'user';
 
 function getToken() {
-  return localStorage.getItem(TOKEN_KEY);
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (!token || token === 'null' || token === 'undefined') {
+    return null;
+  }
+  return token;
 }
 
 function setSession(accesstoken, user) {
+  if (!accesstoken) {
+    return false;
+  }
   localStorage.setItem(TOKEN_KEY, accesstoken);
   if (user) {
     localStorage.setItem(USER_KEY, JSON.stringify(user));
   }
+  return true;
 }
 
 function getUser() {
@@ -35,8 +43,16 @@ function requireAuth() {
   return true;
 }
 
+function bearerHeader() {
+  const token = getToken();
+  if (!token) return null;
+  return { Authorization: `Bearer ${token}` };
+}
+
 function authHeaders(json = true) {
-  const headers = { Authorization: `Bearer ${getToken()}` };
+  const bearer = bearerHeader();
+  if (!bearer) return null;
+  const headers = { ...bearer };
   if (json) {
     headers['Content-Type'] = 'application/json';
   }
@@ -44,7 +60,10 @@ function authHeaders(json = true) {
 }
 
 async function apiJson(url, options = {}) {
-  const response = await fetch(url, options);
+  const response = await fetch(url, {
+    ...options,
+    credentials: 'same-origin',
+  });
   const data = await response.json().catch(() => ({}));
   return { response, data };
 }

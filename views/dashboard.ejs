@@ -169,9 +169,15 @@
     }
 
     async function loadPosts() {
+      const headers = authHeaders();
+      if (!headers) {
+        logout();
+        return;
+      }
+
       const [{ response: feedRes, data: feedData }, { response: mineRes, data: mineData }] = await Promise.all([
-        apiJson('/posts/', { headers: authHeaders() }),
-        apiJson('/posts/mine', { headers: authHeaders() }),
+        apiJson('/posts/', { headers }),
+        apiJson('/posts/mine', { headers }),
       ]);
 
       if (feedRes.ok) {
@@ -200,10 +206,18 @@
         formData.append('images', file);
       }
 
+      const headers = authHeaders(false);
+      if (!headers) {
+        showFeedMessage('Session expired. Please log in again.', 'warning');
+        setTimeout(logout, 1000);
+        return;
+      }
+
       try {
         const response = await fetch('/posts/createPost', {
           method: 'POST',
-          headers: { Authorization: `Bearer ${getToken()}` },
+          headers,
+          credentials: 'same-origin',
           body: formData,
         });
         const data = await response.json();
@@ -212,6 +226,9 @@
           e.target.reset();
           showFeedMessage(data.message || 'Post created', 'success');
           await loadPosts();
+        } else if (response.status === 401) {
+          showFeedMessage(data.message || 'Session expired. Please log in again.', 'warning');
+          setTimeout(logout, 1500);
         } else {
           showFeedMessage(data.message || 'Failed to create post', 'danger');
         }

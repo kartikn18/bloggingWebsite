@@ -13,6 +13,6 @@ export const generateAccessToken =(payload:{
     id:number,
     email:string
 })=>{
-    const token = Jwt.sign(payload,process.env.JWT_SECRET as string,{expiresIn:'15m'});
+    const token = Jwt.sign(payload,process.env.JWT_SECRET as string,{expiresIn:'24h'});
     return token;   
 }
