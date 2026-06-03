@@ -6,7 +6,7 @@ export const postController = {
         async createPost(req:Request,res:Response,next:NextFunction){
         const userid = req.user?.id;
       const {title,content} = req.body;
-      const allowedformats = ['image/jpeg','image/png','image/gif'];
+      const allowedformats = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
       const images  = Array.isArray(req.files) ? req.files : [];
       if(images.some((file) => !allowedformats.includes(file.mimetype))) {
         return res.status(400).json({
@@ -21,7 +21,7 @@ export const postController = {
                 message: 'Please upload at least one image',
             });
         }
-        const uploads = await Promise.all(images.map((file) => uploadToCloudinary(file.path)));
+        const uploads = await Promise.all(images.map((file) => uploadToCloudinary(file)));
         const imageUrls = uploads
             .filter((img) => img.success && img.data)
             .map((img) => img.data as string);
@@ -59,6 +59,7 @@ export const postController = {
     },
     async likePost(req:Request,res:Response,next:NextFunction){
         const postid = req.params.id;
+      
         try{
             const likepost = await PostsService.likepost(Number(postid));
             res.status(200).json({

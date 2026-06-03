@@ -23,8 +23,15 @@ export type blogsimages_url = {
     creates_at:Date,
     updated_at:Date
 }
+export type likes = {
+    id:number,
+    user_id:number,
+    post_id:number,
+    created_at:Date
+}
 export interface database {
 users :users,
-posts :post,
-blogsimages_url : blogsimages_url
+post :post,
+blogsimages_url : blogsimages_url,
+likes : likes
 };
