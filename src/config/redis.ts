@@ -1,18 +1,19 @@
-import redis from "ioredis";
-import dotenv from "dotenv";
-import { readdirSync } from "fs";
 
+import { Redis } from "@upstash/redis";
+import dotenv from "dotenv";
 dotenv.config();
 
-const redisclient = new redis({
-    host: process.env.REDIS_HOST,
-    port: Number(process.env.REDIS_PORT) || 6379,
-})
-console.log('redis info',process.env.REDIS_HOST,process.env.REDIS_PORT);
-redisclient.on('connect',()=>{
-    console.log('Connected to Redis');
-})
-redisclient.on('error',(err)=>{
-    console.log('Redis error',err);
-})
-export default redisclient;
+export const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+});
+
+async function test() {
+  await redis.set("foo", "bar");
+
+  const value = await redis.get("foo");
+
+  console.log(value);
+}
+
+test();

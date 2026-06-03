@@ -129,6 +129,13 @@
       postsContainer.innerHTML = posts.map((post) => {
         const isOwner = user && Number(user.id) === Number(post.user_id);
         const initial = (post.username || 'U').charAt(0).toUpperCase();
+        const imageHtml = post.image_url
+          ? `<img
+               src="${escapeHtml(post.image_url)}"
+               alt="Post image"
+               style="width:100%;max-height:400px;object-fit:cover;border-radius:12px;margin-bottom:12px;"
+               loading="lazy">`
+          : '';
         return `
           <div class="card card-app post-card" data-post-id="${post.id}">
             <div class="card-body">
@@ -145,8 +152,14 @@
               </div>
               <h5 class="fw-semibold post-title">${escapeHtml(post.title)}</h5>
               <p class="post-content mb-3">${escapeHtml(post.content)}</p>
-              <button type="button" class="btn btn-outline-primary btn-sm like-btn" data-post-id="${post.id}">
-                <i class="fas fa-heart"></i> Like (<span class="likes-count">${post.likes ?? 0}</span>)
+              ${imageHtml}
+              <button type="button"
+                      class="btn btn-outline-primary btn-sm like-btn"
+                      data-post-id="${post.id}"
+                      data-liked="false">
+                <i class="fas fa-heart"></i>
+                <span class="like-label">Like</span>
+                (<span class="likes-count">${post.likes ?? 0}</span>)
               </button>
             </div>
           </div>`;
@@ -249,9 +262,12 @@
         });
         if (response.ok) {
           const countEl = btn.querySelector('.likes-count');
-          const likes = data.likepost?.likes ?? (parseInt(countEl.textContent, 10) + 1);
-          countEl.textContent = likes;
-          btn.classList.add('liked');
+          const labelEl = btn.querySelector('.like-label');
+          countEl.textContent = data.post?.likes ?? countEl.textContent;
+          const nowLiked = data.liked;
+          btn.dataset.liked = nowLiked ? 'true' : 'false';
+          labelEl.textContent = nowLiked ? 'Unlike' : 'Like';
+          btn.classList.toggle('liked', nowLiked);
         } else {
           showFeedMessage(data.message || 'Could not like post', 'danger');
         }
