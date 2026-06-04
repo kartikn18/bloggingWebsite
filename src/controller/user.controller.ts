@@ -1,6 +1,6 @@
 import { userServices } from "../services/user.services";
 import { Request, Response } from "express";
-import redisclient from "../config/redis";
+import {redis} from "../config/redis";
 
 const WINDOW_SIZE = 5 * 60;
 const MAX_ATTEMPTS = 3;
@@ -33,7 +33,7 @@ export const usercontroller = {
     const attemptskey = `attempts:${ip}`;
 
     try {
-      const isBlocked = await redisclient.exists(blockedip);
+      const isBlocked = await redis.exists(blockedip);
 
       if (isBlocked) {
         return res.status(403).json({
@@ -45,7 +45,7 @@ export const usercontroller = {
         await userServices.loginuser(email, password);
 
      
-      await redisclient.del(attemptskey);
+      await redis.del(attemptskey);
 
       res.cookie("refreshtoken", refreshtoken, {
         httpOnly: true,
@@ -61,14 +61,14 @@ export const usercontroller = {
         accesstoken,
       });
     } catch (error) {
-      const attempts = await redisclient.incr(attemptskey);
+      const attempts = await redis.incr(attemptskey);
 
       if (attempts === 1) {
-        await redisclient.expire(attemptskey, WINDOW_SIZE);
+        await redis.expire(attemptskey, WINDOW_SIZE);
       }
 
       if (attempts >= MAX_ATTEMPTS) {
-        await redisclient.set(blockedip, "1", "EX", WINDOW_SIZE);
+        await redis.set(blockedip, "1", { ex: WINDOW_SIZE });
       }
 
       return res.status(400).json({

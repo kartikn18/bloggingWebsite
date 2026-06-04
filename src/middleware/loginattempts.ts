@@ -1,5 +1,5 @@
 import {Request,Response,NextFunction} from "express";
-import redisclient from "../config/redis";
+import {redis} from '../config/redis';
 const MAX_ATTEMPTS = 3;
 const windowsize = 5*60;
  export   const  loginattempts =  async (req:Request,res:Response,next:NextFunction)=>{
@@ -8,7 +8,7 @@ const windowsize = 5*60;
   try {
    const ip = req.ip;
    const blockedip = `blocked:${ip}`;
-   const isblocked = await redisclient.get(blockedip);
+   const isblocked = await redis.get(blockedip);
    if(isblocked){
       return res.status(403).json({message:"Too many login attempts. Please try again later."});
    }
