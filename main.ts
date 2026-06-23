@@ -2,8 +2,8 @@ import path from 'path';
 import express from 'express';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
-import postsRouter from './src/routes/posts.routes';
-import { authroutes } from './src/routes/auth.routes';
+import  {postsRouter}  from "./src/routes/posts.routes";
+import  {authroutes } from './src/routes/auth.routes';
 import { viewsRouter } from './src/routes/views.routes';
 
 dotenv.config();

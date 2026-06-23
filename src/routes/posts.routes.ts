@@ -3,7 +3,7 @@ import { postController } from '../controller/posts.controller';
 import { middleare } from '../middleware/islogin';
 import { multerConfig } from '../config/multer';
 
-const postsRouter = Router();
+ export const postsRouter = Router();
 
 postsRouter.get('/', postController.getposts);
 postsRouter.get('/mine', middleare.islogin, postController.dashboardposts);
@@ -23,4 +23,3 @@ postsRouter.post(
 postsRouter.put('/updatePost/:id', middleare.islogin, postController.updatePost);
 postsRouter.post('/likePost/:id', middleare.islogin, postController.likePost);
 
-export default postsRouter;
