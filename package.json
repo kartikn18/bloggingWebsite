@@ -4,13 +4,15 @@
   "description": "",
   "main": "main.ts",
   "scripts": {
-  "dev": "nodemon --exec ts-node main.ts",
-  "start": "ts-node main.ts"
-},
+    "dev": "nodemon --exec ts-node main.ts",
+    "start": "ts-node main.ts"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1075.0",
+    "@aws-sdk/s3-request-presigner": "^3.1075.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/dotenv": "^6.1.1",
     "@types/express": "^5.0.6",
