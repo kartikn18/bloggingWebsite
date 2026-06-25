@@ -31,4 +31,5 @@ export const PostsService = {
     async dashboardposts(userid: number) {
         return await PostModel.dashboardposts(userid);
     },
+    
 };
