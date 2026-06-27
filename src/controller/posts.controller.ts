@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { PostsService } from '../services/posts.services';
-import { uploadToCloudinary,postImageUploadtos3 } from '../utils/upload';
+import { postImageUploadtos3 } from '../utils/upload';
 
 import {redis} from '../config/redis'
 
@@ -27,6 +27,7 @@ export const postController = {
             }
 
             const uploads = await Promise.all(images.map((file) => postImageUploadtos3(file)));
+            console.log('Uploads:', uploads); // Log the upload results for debugging
             const imageUrls = uploads
                 .filter((img) => img.success && img.data)
                 .map((img) => img.data as string);
