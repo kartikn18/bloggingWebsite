@@ -27,7 +27,6 @@ export const postController = {
             }
 
             const uploads = await Promise.all(images.map((file) => postImageUploadtos3(file)));
-            console.log('Uploads:', uploads); // Log the upload results for debugging
             const imageUrls = uploads
                 .filter((img) => img.success && img.data)
                 .map((img) => img.data as string);

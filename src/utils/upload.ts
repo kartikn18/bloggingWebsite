@@ -28,7 +28,6 @@ export const postImageUploadtos3 = async (
 
       return { success: true, message: 'Image uploaded to S3', data: url };
     } catch (err) {
-      console.error('Error uploading to S3:', err);
       return { success: false, message: 'Error uploading image to S3' };
     }
   }
