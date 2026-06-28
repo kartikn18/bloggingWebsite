@@ -1,6 +1,6 @@
 # Social Connect
 
-A full-stack social blogging platform where users can create posts with images, like/unlike posts, and view a personalized dashboard — built with Node.js, TypeScript, PostgreSQL, Redis, and Cloudinary.
+A full-stack social blogging platform where users can create posts with images, like/unlike posts, and view a personalized dashboard — built with Node.js, TypeScript, Neon (PostgreSQL), Redis, and AWS S3.
 
 ---
 
@@ -11,9 +11,9 @@ A full-stack social blogging platform where users can create posts with images, 
 | Runtime | Node.js |
 | Language | TypeScript |
 | Framework | Express 5 |
-| Database | PostgreSQL (via Kysely query builder) |
+| Database | Neon (serverless PostgreSQL via Kysely query builder) |
 | Caching | Redis (via ioredis) |
-| File Storage | Cloudinary |
+| File Storage | AWS S3 (via @aws-sdk/client-s3) |
 | Auth | JWT (access token + refresh token) |
 | Templating | EJS |
 | Validation | Zod |
@@ -26,7 +26,7 @@ A full-stack social blogging platform where users can create posts with images, 
 
 - **Auth** — register and login with rate limiting (blocks IP after 3 failed attempts for 5 minutes)
 - **JWT sessions** — access token (24h) stored in `localStorage`, refresh token (7d) in an `httpOnly` cookie
-- **Create posts** — title, content, and one or more images (uploaded to Cloudinary)
+- **Create posts** — title, content, and one or more images (uploaded to AWS S3)
 - **Image display** — uploaded images render inline on the dashboard feed
 - **Like / Unlike** — toggle-based; each user can like a post once (enforced by `UNIQUE(user_id, post_id)` at the database level)
 - **Dashboard feed** — shows all posts from all users with images and like counts
@@ -52,9 +52,9 @@ A full-stack social blogging platform where users can create posts with images, 
 │   └── js/api.js                  # Client-side auth helpers
 └── src/
     ├── config/
-    │   ├── db.ts                  # Kysely + PostgreSQL pool
+    │   ├── db.ts                  # Kysely + Neon PostgreSQL pool
     │   ├── redis.ts               # ioredis client
-    │   ├── cloudinary.ts          # Cloudinary SDK config
+    │   ├── s3.ts                  # AWS S3 client config
     │   └── multer.ts              # Memory storage, 5MB limit
     ├── schema/
     │   └── db.ts                  # Kysely table types
@@ -82,7 +82,7 @@ A full-stack social blogging platform where users can create posts with images, 
     │   └── posts.types.ts
     └── utils/
         ├── jwt.ts                 # Token generation helpers
-        └── upload.ts              # Cloudinary upload via stream
+        └── upload.ts              # S3 upload via PutObjectCommand
 ```
 
 ---
@@ -110,9 +110,9 @@ likes (id, user_id → users, post_id → post, created_at, UNIQUE(user_id, post
 ### Prerequisites
 
 - Node.js 18+
-- PostgreSQL
+- A [Neon](https://neon.tech) account (free tier works)
 - Redis
-- A [Cloudinary](https://cloudinary.com) account (free tier works)
+- An [AWS](https://aws.amazon.com) account with an S3 bucket
 
 ### 1. Clone and install
 
@@ -131,12 +131,8 @@ Create a `.env` file in the project root:
 PORT=3000
 NODE_ENV=development
 
-# PostgreSQL
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=socialconnect
-DB_USER=postgres
-DB_PASSWORD=yourpassword
+# Neon PostgreSQL
+DATABASE_URL=postgresql://<user>:<password>@<host>.neon.tech/<dbname>?sslmode=require
 
 # Redis
 REDIS_HOST=127.0.0.1
@@ -145,18 +141,19 @@ REDIS_PORT=6379
 # JWT
 JWT_SECRET=your_super_secret_key_here
 
-# Cloudinary
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
+# AWS S3
+AWS_REGION=your_aws_region
+AWS_ACCESS_KEY_ID=your_access_key_id
+AWS_SECRET_ACCESS_KEY=your_secret_access_key
+AWS_S3_BUCKET_NAME=your_bucket_name
 ```
 
 ### 3. Create the database tables
 
-Connect to your PostgreSQL instance and run the SQL in `src/migrations/SCHEMA.SQL`:
+Run the SQL in `src/migrations/SCHEMA.SQL` against your Neon database. You can use the Neon SQL editor in the dashboard, or connect via `psql` using your connection string:
 
 ```bash
-psql -U postgres -d socialconnect -f src/migrations/SCHEMA.SQL
+psql $DATABASE_URL -f src/migrations/SCHEMA.SQL
 ```
 
 ### 4. Start the dev server
@@ -205,7 +202,9 @@ The app will be available at `http://localhost:3000`.
 When a user clicks Like, the server checks the `likes` table for an existing `(user_id, post_id)` row. If found it deletes the row and decrements the count (unlike); if not found it inserts and increments (like). The `UNIQUE(user_id, post_id)` constraint on the `likes` table acts as a safety net at the database level.
 
 ### Image uploads
-Multer is configured with `memoryStorage` — files never touch disk. The buffer is piped directly to Cloudinary via `upload_stream`. The returned `secure_url` is stored in `blogsimages_url` linked to the post's id.
+Multer is configured with `memoryStorage` — files never touch disk. The buffer is sent directly to AWS S3 via `PutObjectCommand` from `@aws-sdk/client-s3`. The resulting S3 object URL is stored in `blogsimages_url` linked to the post's id.
+
+Images are stored under a structured key (e.g. `posts/<postId>/<filename>`) and served via the S3 bucket URL or an optional CloudFront distribution.
 
 ### Caching
 Dashboard posts (`GET /posts/mine`) are cached in Redis under the key `dashboardposts:<userid>` with a 5-minute TTL. The cache is invalidated whenever the user creates a new post.
@@ -216,6 +215,9 @@ The login route tracks failed attempts in Redis under `attempts:<ip>`. After 3 f
 ### Password rules
 Zod enforces: minimum 8 characters, at least one uppercase letter, one lowercase letter, one digit, and one special character (`@$!%*?&`).
 
+### Neon database connection
+Neon uses a serverless PostgreSQL driver over WebSockets. The `db.ts` config connects via the `DATABASE_URL` connection string with `sslmode=require`. Kysely is used as the query builder on top, keeping the rest of the codebase unchanged.
+
 ---
 
 ## Environment Notes
@@ -223,3 +225,5 @@ Zod enforces: minimum 8 characters, at least one uppercase letter, one lowercase
 - `NODE_ENV=production` enables the `secure` flag on the refresh token cookie.
 - Both the access token and refresh token are signed with the same `JWT_SECRET`. In a production setup you would use separate secrets or asymmetric keys.
 - The `likes` counter on the `post` table is a denormalised cache of the `likes` junction table row count. They are kept in sync by the toggle logic in `PostModel.likepost`.
+- Make sure your S3 bucket has the correct CORS policy and that uploaded objects are either public-read or accessed via pre-signed URLs, depending on your access model.
+- Neon databases are paused after inactivity on the free tier — the first request after a pause will have a cold-start delay of ~1 second.
