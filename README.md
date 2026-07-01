@@ -1,6 +1,23 @@
 # Social Connect
 
-A full-stack social blogging platform where users can create posts with images, like/unlike posts, and view a personalized dashboard — built with Node.js, TypeScript, Neon (PostgreSQL), Redis, and AWS S3.
+A full-stack social blogging platform where users can create posts with images, like/unlike posts, and view a personalized dashboard.
+
+Built with **Node.js**, **TypeScript**, **Neon (PostgreSQL)**, **Redis**, and **AWS S3** — containerized with **Docker** and deployed to **AWS EC2** via a **GitHub Actions CI/CD** pipeline.
+
+---
+
+## Architecture
+
+![Social Connect Deployment Architecture](./docs/architecture.png)
+
+**Flow:**
+
+1. Code is pushed to **GitHub**.
+2. **GitHub Actions** CI/CD pipeline triggers on push, builds a **Docker** image of the app.
+3. The image is deployed to an **AWS EC2** instance running the containerized app.
+4. Users interact with the app over HTTP (request/response) served from the EC2-hosted container.
+5. The app connects to **Redis** for caching and to **Neon (serverless PostgreSQL)** for persistent storage — covering the `users`, `post`, `likes`, and `blogimage_url` tables.
+6. Image uploads are streamed from the app directly to an **AWS S3** bucket; the resulting object URL is stored back in the database and used to render images on the dashboard.
 
 ---
 
@@ -13,11 +30,14 @@ A full-stack social blogging platform where users can create posts with images, 
 | Framework | Express 5 |
 | Database | Neon (serverless PostgreSQL via Kysely query builder) |
 | Caching | Redis (via ioredis) |
-| File Storage | AWS S3 (via @aws-sdk/client-s3) |
+| File Storage | AWS S3 (via `@aws-sdk/client-s3`) |
 | Auth | JWT (access token + refresh token) |
 | Templating | EJS |
 | Validation | Zod |
 | File Uploads | Multer (memory storage) |
+| Containerization | Docker |
+| Hosting | AWS EC2 |
+| CI/CD | GitHub Actions |
 | Dev Server | Nodemon + ts-node |
 
 ---
@@ -41,6 +61,11 @@ A full-stack social blogging platform where users can create posts with images, 
 
 ```
 ├── main.ts                        # App entry point
+├── Dockerfile                     # Multi-stage build for production image
+├── docker-compose.yml             # Local dev services (app, Redis)
+├── .github/
+│   └── workflows/
+│       └── deploy.yml             # CI/CD pipeline: build, push, deploy to EC2
 ├── views/
 │   ├── partials/head.ejs
 │   ├── login.ejs
@@ -105,13 +130,13 @@ likes (id, user_id → users, post_id → post, created_at, UNIQUE(user_id, post
 
 ---
 
-## Getting Started
+## Getting Started (Local Development)
 
 ### Prerequisites
 
 - Node.js 18+
+- Docker & Docker Compose
 - A [Neon](https://neon.tech) account (free tier works)
-- Redis
 - An [AWS](https://aws.amazon.com) account with an S3 bucket
 
 ### 1. Clone and install
@@ -163,6 +188,43 @@ npm start
 ```
 
 The app will be available at `http://localhost:3000`.
+
+### Running with Docker (local)
+
+```bash
+docker-compose up --build
+```
+
+This spins up the app alongside a local Redis instance. Neon is used as the database in both local and production environments.
+
+---
+
+## Deployment (Production)
+
+The app runs as a Docker container on an **AWS EC2** instance, deployed automatically via **GitHub Actions** on every push to `main`.
+
+**Pipeline:**
+
+1. **Push** — code is pushed to the `main` branch on GitHub.
+2. **CI/CD trigger** — GitHub Actions workflow (`.github/workflows/deploy.yml`) runs on push.
+3. **Build** — the workflow builds a Docker image from the multi-stage `Dockerfile` (compiles TypeScript via `tsc`, then runs the compiled `dist/` output — no `ts-node` in production).
+4. **Deploy** — the built image is shipped to the EC2 instance and the running container is restarted with zero-downtime rollover.
+5. The app on EC2 connects out to Neon (PostgreSQL) and Redis, and streams file uploads directly to AWS S3.
+
+**Required GitHub Actions secrets:**
+
+| Secret | Purpose |
+|---|---|
+| `EC2_HOST` | Public IP/DNS of the EC2 instance |
+| `EC2_SSH_KEY` | Private key for SSH deploy access |
+| `DATABASE_URL` | Neon connection string |
+| `JWT_SECRET` | JWT signing secret |
+| `AWS_REGION` | AWS region for S3 |
+| `AWS_ACCESS_KEY_ID` | IAM access key scoped to the S3 bucket |
+| `AWS_SECRET_ACCESS_KEY` | IAM secret key |
+| `AWS_S3_BUCKET_NAME` | Target S3 bucket name |
+
+> **Security note:** IAM credentials used in production are scoped to the specific S3 bucket only (least-privilege policy), not full AWS account access.
 
 ---
 
@@ -217,6 +279,9 @@ Zod enforces: minimum 8 characters, at least one uppercase letter, one lowercase
 
 ### Neon database connection
 Neon uses a serverless PostgreSQL driver over WebSockets. The `db.ts` config connects via the `DATABASE_URL` connection string with `sslmode=require`. Kysely is used as the query builder on top, keeping the rest of the codebase unchanged.
+
+### Production build
+The Docker image runs a proper `tsc` compile step during build and starts the app from the compiled `dist/` output — `ts-node` is dev-only and is never run in the production container.
 
 ---
 
